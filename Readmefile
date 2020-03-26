@@ -1,0 +1,77 @@
+sudo docker run -p 9080:9083  --name wealthmanager --network="host" -e JAVA_OPTS="-Dserver.port=9083 -Dspring.application.instance_id=WMS3" wealthmanager
+---------------------------------------------------------------
+docker volume create --name=my-db
+/usr/sbin/mysqld: ready for connections. Version: '8.0.19'  socket: '/var/run/mysqld/mysqld.sock'  port: 0
+"Gateway": "172.19.0.1",
+"IPAddress": "172.19.0.2",
+"HostPort": "3306"
+
+sudo docker run -p 8761:8761  --name serviceregistry --net sbnet --ip 172.18.0.15 -e JAVA_OPTS="-Dserver.port=8761 -Dspring.application.instance_id=serviceregistry" serviceregistry
+sudo docker run -p 9080:9080  --name wealthmanager --net sbnet --ip 172.18.0.2 -e JAVA_OPTS="-Dserver.port=9080 -Dspring.application.instance_id=WMS9080 -Deureka.application.instance-id=WMS9080" wealthmanager
+sudo docker run -p 9081:9081  --name wealthmanager2 --net sbnet --ip 172.18.0.3 -e JAVA_OPTS="-Dserver.port=9081 -Dspring.application.instance_id=WMS9081 -Deureka.application.instance-id=WMS9081" wealthmanager
+sudo docker run -p 8080:8080  --name apigateway --net sbnet --ip 172.18.0.14 -e JAVA_OPTS="-Dserver.port=8080 -Dspring.application.instance_id=apigateway -Deureka.application.instance-id=apigateway" apigateway
+
+---------------------------------------------------------------
+docker-compose up --no-build
+docker-compose up --build --scale wealthmanager=1
+docker-compose up --scale wealthmanager=3
+docker-compose up --scale wealthmanager=-1
+
+---------------------------------------------------------------
+--delete all stopped containers
+docker container prune --filter "until=1s"
+
+---------------------------------------------------------------
+Errors seen during Learning phase
+
+1)
+ERROR: Couldn't connect to Docker daemon at http+docker://localunixsocket - is it running?
+If it's at a non-standard location, specify the URL with the DOCKER_HOST environment variable.
+
+2)
+WARNING: The scale command is deprecated. Use the up command with the --scale flag instead.
+WARNING: The "wealthmanager" service is using the custom container name "wealthmanager". Docker requires each container to have a unique name. Remove the custom name to scale the service.
+WARNING: The "wealthmanager" service specifies a port on the host. If multiple containers for this service are created on a single host, the port will clash.
+
+---------------------------------------------------------------
+
+#https://dzone.com/articles/all-about-ipchibernate-manytomany-association
+docker exec -i docker-mysql mysql -uroot -proot book_manager <book_manager.sql
+docker exec -it docker-mysql bash;
+docker build -f Dockerfile -t book_manager_app .
+docker run -t --link docker-mysql:mysql -p 10222:10222 book_manager_app
+he --link command will allow the book_manager_app container to use the port of MySQL container and -t  stands for--tty, which will allocate a pseudo-terminal.
+After running this command, we will hit http://localhost:10222/book from our host machine browser, and it will return a list of books.
+
+Good read - https://docker-k8s-lab.readthedocs.io/en/latest/docker/docker-compose.htmldocke
+Good read - MySQL - https://severalnines.com/database-blog/mysql-docker-containers-understanding-basics
+
+https://www.javainuse.com/devOps/docker/docker-compose-tutorial
+https://dzone.com/articles/go-microservices-part-5-deploying-on-docker-swarm
+https://medium.com/swlh/docker-swarm-tutorial-deploying-spring-boot-microservices-to-multiple-aws-ec2-instances-f28488179d0a
+
+https://hellokoding.com/docker-compose-with-spring-boot-mysql-nginx/
+https://stackoverflow.com/questions/29101043/cant-connect-to-docker-from-docker-compose
+
+------------------------------------------------
+
+The following only builds the images, does not start the containers:
+
+    docker-compose build
+
+The following builds the images if the images do not exist and starts the containers:
+
+    docker-compose up
+
+If you add the --build option, it is forced to build the images even when not needed:
+
+    docker-compose up --build
+
+The following skips the image build process:
+
+    docker-compose up --no-build
+
+If the images aren't built beforehand, it fails.
+
+The --no-cache option disables the Docker build cache in the image creation process. This is used to cache each layer in the Dockerfile and to speed up the image creation reusing layers (~ Dockerfile lines) previously built for other images that are identical.
+-------------------------------------

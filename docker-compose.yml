@@ -1,0 +1,99 @@
+version: '3'
+services:
+  serviceregistry:
+    build:
+      context: /home/rahul/IdeaProjects/serviceregistry/
+      dockerfile: Dockerfile
+    image: serviceregistry:latest
+    entrypoint: "bash -c 'java $${JAVA_OPTS} -jar /serviceregistry.jar'"
+    environment:
+      JAVA_OPTS: "-Dserver.port=8761 -Dspring.application.instance_id=serviceregistry"
+    expose:
+      - 8761
+    ports:
+      - 8761:8761
+    networks:
+      rnanet:
+        ipv4_address: 172.18.0.15
+    volumes:
+      - rnavolume:/var/lib/mydocker/serviceregistry
+    logging:
+      driver: json-file
+  wealthmanager:
+    build:
+      context: /home/rahul/IdeaProjects/wealthmanager/
+      dockerfile: Dockerfile
+    image: wealthmanager:latest
+    depends_on:
+      - mysqldb
+      - serviceregistry
+    entrypoint: "bash -c 'java $${JAVA_OPTS} -jar /wealthmanager.jar'"
+    environment:
+      JAVA_OPTS: "-Dserver.port=9080"
+    expose:
+      - 9080
+    ports:
+      - "9080"
+    networks:
+      - rnanet
+    volumes:
+      - rnavolume:/var/lib/mydocker/wealthmanager
+    logging:
+      driver: json-file
+  apigateway:
+    build:
+      context: /home/rahul/IdeaProjects/apigateway/
+      dockerfile: Dockerfile
+    image: apigateway:latest
+    depends_on:
+      - serviceregistry
+#    entrypoint: /opt/spring-cloud/bin/config-client-entrypoint.sh
+    entrypoint: "bash -c 'java $${JAVA_OPTS} -jar /apigateway.jar'"
+    environment:
+      JAVA_OPTS: "-Dserver.port=8080 -Dspring.application.instance_id=apigateway"
+    expose:
+      - 8080
+    ports:
+      - 8080:8080
+    networks:
+      rnanet:
+        ipv4_address: 172.18.0.14
+#    links:
+#      - config-server:config-server
+#    depends_on:
+#      - config-server
+    volumes:
+      - rnavolume:/var/lib/mydocker/apigateway
+    logging:
+      driver: json-file
+  mysqldb:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'wealthmanager'
+      # So you don't have to use root, but you can if you like
+      MYSQL_USER: 'root'
+      # You can use whatever password you like
+      MYSQL_PASSWORD: 'root'
+      # Password for root access
+      MYSQL_ROOT_PASSWORD: 'root'
+    ports:
+      # <Port exposed> : < MySQL Port running inside container>
+      - '3306:3306'
+    expose:
+      # Opens port 3306 on the container
+      - '3306'
+    # Where our data will be persisted
+    volumes:
+      - my-db:/var/lib/mysql
+networks:
+  rnanet:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
+volumes:
+  rnavolume:
+    external: true
+  my-db:
+    external: true

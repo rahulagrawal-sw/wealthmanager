@@ -1,0 +1,4 @@
+-- wealthmanager database script
+create table wmsinfo (id long, name varchar(200));
+insert into wmsinfo (id, name) values (1, 'A');
+insert into wmsinfo (id, name) values (2, 'B');

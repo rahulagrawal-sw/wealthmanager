@@ -1,13 +1,26 @@
 spring:
   application:
     name: wms-service
-    instance_id: WMS
+    instance_id: ${random.uuid}
+  datasource:
+    url: jdbc:mysql://172.19.0.2:3306/wealthmanager
+    username: root
+    password: root
+  jpa:
+    properties:
+      hibernate:
+        dialet: org.hibernate.dialect.MySQL5InnoDBDialect
+        ddl-auto: update
+  cloud:
+    loadbalancer:
+      ribbon:
+        enabled: false
 server:
   port: ${PORT:0}
 eureka:
   client:
     serviceUrl:
-      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+      defaultZone: ${EUREKA_URI:http://172.18.0.15:8761/eureka}
   instance:
     preferIpAddress: true
     instance-id: ${spring.application.name}:${spring.application.instance_id}
